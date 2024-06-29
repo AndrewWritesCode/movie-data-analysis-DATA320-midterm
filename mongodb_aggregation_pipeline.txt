@@ -1,0 +1,177 @@
+[
+    {
+        '$addFields': {
+            'user_rating': {
+                '$convert': {
+                    'input': '$user_rating',
+                    'to': 'double',
+                    'onError': None
+                }
+            },
+            'votes': {
+                '$convert': {
+                    'input': '$votes',
+                    'to': 'int',
+                    'onError': None
+                }
+            },
+            'runtime': {
+                '$convert': {
+                    'input': '$runtime',
+                    'to': 'int',
+                    'onError': None
+                }
+            },
+            'is_gross_sales_usd': {
+                '$regexMatch': {
+                    'input': '$gross_sales',
+                    'regex': re.compile(r"^\\$")
+                }
+            },
+            'gross_sales': {
+                '$regexFind': {
+                    'input': '$gross_sales',
+                    'regex': re.compile(r"([\\d,]+)")
+                }
+            },
+            'is_budget_usd': {
+                '$regexMatch': {
+                    'input': '$budget',
+                    'regex': re.compile(r"^\\$")
+                }
+            },
+            'budget': {
+                '$regexFind': {
+                    'input': '$budget',
+                    'regex': re.compile(r"([\\d,]+)")
+                }
+            },
+            'is_opening_weekend_usd': {
+                '$regexMatch': {
+                    'input': '$opening_weekend',
+                    'regex': re.compile(r"^\\$")
+                }
+            },
+            'opening_weekend': {
+                '$regexFind': {
+                    'input': '$opening_weekend',
+                    'regex': re.compile(r"([\\d,]+)")
+                }
+            },
+            'certification': {
+                '$split': [
+                    '$certification', ', '
+                ]
+            },
+            'genres': {
+                '$split': [
+                    '$genres', ', '
+                ]
+            },
+            'release_date': {
+                '$convert': {
+                    'input': '$release_date',
+                    'to': 'date',
+                    'onError': None
+                }
+            }
+        }
+    }, {
+        '$addFields': {
+            'gross_sales': {
+                '$switch': {
+                    'branches': [
+                        {
+                            'case': '$is_gross_sales_usd',
+                            'then': {
+                                '$replaceAll': {
+                                    'input': '$gross_sales.match',
+                                    'find': ',',
+                                    'replacement': ''
+                                }
+                            }
+                        }
+                    ],
+                    'default': None
+                }
+            },
+            'opening_weekend': {
+                '$switch': {
+                    'branches': [
+                        {
+                            'case': '$is_opening_weekend_usd',
+                            'then': {
+                                '$replaceAll': {
+                                    'input': '$opening_weekend.match',
+                                    'find': ',',
+                                    'replacement': ''
+                                }
+                            }
+                        }
+                    ],
+                    'default': None
+                }
+            },
+            'budget': {
+                '$switch': {
+                    'branches': [
+                        {
+                            'case': '$is_budget_usd',
+                            'then': {
+                                '$replaceAll': {
+                                    'input': '$budget.match',
+                                    'find': ',',
+                                    'replacement': ''
+                                }
+                            }
+                        }
+                    ],
+                    'default': None
+                }
+            },
+            'mpaa': {
+                '$first': {
+                    '$setIntersection': [
+                        '$certification', [
+                            'G', 'PG', 'PG-13', 'R', 'NC-17'
+                        ]
+                    ]
+                }
+            },
+            'genre': {},
+            'release_year': {
+                '$year': '$release_date'
+            },
+            'release_month': {
+                '$month': '$release_date'
+            },
+            'release_day': {
+                '$dayOfMonth': '$release_date'
+            }
+        }
+    }, {
+        '$addFields': {
+            'budget': {
+                '$convert': {
+                    'input': '$budget',
+                    'to': 'int',
+                    'onError': None
+                }
+            },
+            'opening_weekend': {
+                '$convert': {
+                    'input': '$opening_weekend',
+                    'to': 'int',
+                    'onError': None
+                }
+            },
+            'gross_sales': {
+                '$convert': {
+                    'input': '$gross_sales',
+                    'to': 'int',
+                    'onError': None
+                }
+            }
+        }
+    }
+]
