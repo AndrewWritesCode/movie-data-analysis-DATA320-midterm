@@ -1,0 +1,6 @@
+*.pt
+runs/
+datasets/
+test_movie_thumbnails/
+
+credentials.json
